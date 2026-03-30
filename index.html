@@ -8,343 +8,128 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #fff; color: #565F66; min-height: 100vh; font-size: 13px; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #FFFFFF;
-      color: #565F66;
-      min-height: 100vh;
-      font-size: 13px;
-    }
-
-    /* ── HEADER ── */
-    .header {
-      background: #000000;
-      padding: 14px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-title {
-      font-size: 17px;
-      font-weight: 800;
-      font-style: italic;
-      text-transform: uppercase;
-      color: #FFFFFF;
-      letter-spacing: 0.06em;
-    }
+    /* HEADER */
+    .header { background: #000; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .header-title { font-size: 17px; font-weight: 800; font-style: italic; text-transform: uppercase; color: #fff; letter-spacing: 0.06em; }
     .header-title .pipe { color: #09D4C8; margin: 0 6px; }
+    .gm-badge { display: flex; align-items: center; gap: 10px; border: 1.5px solid #09D4C8; border-radius: 24px; padding: 6px 18px; background: rgba(9,212,200,0.1); transition: all 0.25s; }
+    .gm-badge-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #09D4C8; }
+    .gm-badge-value { font-size: 22px; font-weight: 800; color: #09D4C8; }
 
-    .gm-badge {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1.5px solid #09D4C8;
-      border-radius: 24px;
-      padding: 6px 18px;
-      background: rgba(9, 212, 200, 0.1);
-      transition: all 0.25s;
-    }
-    .gm-badge-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #09D4C8;
-    }
-    .gm-badge-value {
-      font-size: 22px;
-      font-weight: 800;
-      color: #09D4C8;
-      transition: color 0.25s;
-    }
+    /* BOOK SELECTION */
+    .book-select-screen { padding: 60px 32px; background: #F7F8F9; min-height: calc(100vh - 53px); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .book-select-screen h1 { font-size: 26px; font-weight: 800; color: #000; margin-bottom: 8px; }
+    .book-select-screen p { font-size: 14px; color: #565F66; margin-bottom: 40px; }
+    .book-cards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
+    .book-card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 26px 22px; width: 220px; cursor: pointer; text-align: left; transition: all 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .book-card:hover { border-color: #09D4C8; box-shadow: 0 8px 28px rgba(9,212,200,0.2); transform: translateY(-3px); }
+    .book-card.disabled { opacity: 0.42; cursor: not-allowed; pointer-events: none; }
+    .book-card-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #09D4C8; margin-bottom: 8px; }
+    .book-card-tag.soon { color: #565F66; }
+    .book-card-name { font-size: 19px; font-weight: 800; color: #000; margin-bottom: 8px; line-height: 1.2; }
+    .book-card-desc { font-size: 11px; color: #565F66; line-height: 1.55; margin-bottom: 14px; }
+    .book-card-features { list-style: none; }
+    .book-card-features li { font-size: 11px; color: #565F66; padding: 3px 0; display: flex; gap: 6px; }
+    .book-card-features li::before { content: '→'; color: #09D4C8; font-size: 10px; flex-shrink: 0; }
 
-    /* ── LAYOUT ── */
-    .app-layout {
-      display: flex;
-      max-width: 1280px;
-      margin: 0 auto;
-      min-height: calc(100vh - 53px);
-    }
+    /* BOOK BAR */
+    .book-bar { background: #0a0a0a; border-bottom: 1px solid rgba(9,212,200,0.25); padding: 9px 24px; display: flex; align-items: center; gap: 12px; }
+    .book-bar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #565F66; }
+    .book-bar-name { font-size: 13px; font-weight: 700; color: #09D4C8; }
+    .book-bar-change { font-size: 11px; font-weight: 600; color: #14A6F8; background: none; border: 1px solid #14A6F8; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; margin-left: auto; }
+    .book-bar-change:hover { background: #14A6F8; color: #fff; }
 
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: 284px;
-      flex-shrink: 0;
-      background: #F7F8F9;
-      border-right: 1px solid #e2e8f0;
-      padding: 24px 18px;
-      overflow-y: auto;
-    }
+    /* LAYOUT */
+    .app-wrap { display: flex; max-width: 1280px; margin: 0 auto; min-height: calc(100vh - 98px); }
 
-    .section-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-      color: #09D4C8;
-      margin-bottom: 12px;
-    }
-
-    .interview-block {
-      background: rgba(9, 212, 200, 0.06);
-      border: 1px solid rgba(9, 212, 200, 0.18);
-      border-radius: 8px;
-      padding: 13px 12px 10px;
-      margin-bottom: 10px;
-    }
-    .interview-block-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: #000000;
-      margin-bottom: 10px;
-    }
-    .input-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 7px;
-    }
-    .input-label {
-      display: block;
-      font-size: 10px;
-      font-weight: 600;
-      color: #565F66;
-      margin-bottom: 3px;
-      letter-spacing: 0.03em;
-    }
-    .input-field {
-      width: 100%;
-      background: #F7F8F9;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 7px 8px;
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      color: #000000;
-      outline: none;
-      transition: border-color 0.15s;
-      -moz-appearance: textfield;
-    }
-    .input-field::-webkit-outer-spin-button,
-    .input-field::-webkit-inner-spin-button { -webkit-appearance: none; }
+    /* SIDEBAR */
+    .sidebar { width: 280px; flex-shrink: 0; background: #F7F8F9; border-right: 1px solid #e2e8f0; padding: 20px 16px; overflow-y: auto; }
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: #09D4C8; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; background: #09D4C8; color: #000; font-size: 9px; font-weight: 800; border-radius: 50%; flex-shrink: 0; }
+    .sidebar-divider { border: none; border-top: 1px solid #e2e8f0; margin: 14px 0; }
+    .input-label { display: block; font-size: 10px; font-weight: 600; color: #565F66; margin-bottom: 3px; }
+    .input-field { width: 100%; background: #F7F8F9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 8px; font-family: 'Inter', sans-serif; font-size: 12px; color: #000; outline: none; transition: border-color 0.15s; -moz-appearance: textfield; }
+    .input-field::-webkit-outer-spin-button, .input-field::-webkit-inner-spin-button { -webkit-appearance: none; }
     .input-field:focus { border-color: #09D4C8; }
-    .input-field:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      background: #eef0f2;
-    }
-    .input-field.discount {
-      border-color: rgba(241, 64, 53, 0.35);
-      color: #F14035;
-    }
+    .input-field.discount { border-color: rgba(241,64,53,0.35); color: #F14035; }
     .input-field.discount:focus { border-color: #F14035; }
+    .pkg-select { width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 28px 8px 10px; font-family: 'Inter', sans-serif; font-size: 12px; color: #000; outline: none; appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23565F66' d='M5 7L0 2h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+    .pkg-select:focus { border-color: #09D4C8; }
+    .pkg-fee-pill { margin-top: 8px; padding: 7px 10px; background: rgba(9,212,200,0.09); border-radius: 7px; display: flex; justify-content: space-between; align-items: center; }
+    .pkg-fee-pill-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #09D4C8; }
+    .pkg-fee-pill-value { font-size: 14px; font-weight: 800; color: #000; }
+    .interview-block { background: rgba(9,212,200,0.05); border: 1px solid rgba(9,212,200,0.15); border-radius: 8px; padding: 11px 11px 9px; margin-bottom: 8px; }
+    .interview-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .interview-block-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #000; }
+    .interview-block-price { font-size: 12px; font-weight: 700; color: #565F66; }
+    .free-flex-note { font-size: 10px; font-weight: 600; color: #09D4C8; margin-top: 5px; }
+    .passthrough-sidebar { background: rgba(20,166,248,0.07); border: 1px solid rgba(20,166,248,0.22); border-radius: 8px; padding: 11px; margin-top: 4px; }
+    .passthrough-sidebar-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #14A6F8; margin-bottom: 8px; }
+    .passthrough-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; color: #565F66; }
+    .passthrough-total-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; border-top: 1px solid rgba(20,166,248,0.2); padding-top: 6px; margin-top: 5px; color: #000; }
 
-    .sidebar-divider {
-      border: none;
-      border-top: 1px solid #e2e8f0;
-      margin: 18px 0;
-    }
-    .input-group { margin-bottom: 13px; }
-
-    /* ── MAIN PANEL ── */
-    .main-panel {
-      flex: 1;
-      padding: 22px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      overflow-y: auto;
-    }
-
-    /* ── CARDS ── */
-    .card {
-      background: #FFFFFF;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
-      padding: 20px;
-    }
-
-    .quadrant-row {
-      display: grid;
-      gap: 20px;
-    }
+    /* MAIN */
+    .main-panel { flex: 1; padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; background: #fff; overflow-y: auto; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,0.22); padding: 20px; }
+    .quadrant-row { display: grid; gap: 18px; }
     .top-row    { grid-template-columns: 55fr 45fr; }
     .bottom-row { grid-template-columns: 60fr 40fr; }
+    .card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: #09D4C8; margin-bottom: 12px; }
 
-    /* ── PANEL A: DEAL SUMMARY ── */
-    .summary-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 11px;
-      border-radius: 7px;
-      margin-bottom: 5px;
-    }
-    .summary-line.neutral  { background: rgba(247, 248, 249, 0.9); }
-    .summary-line.featured { background: rgba(9, 212, 200, 0.1); border: 1px solid rgba(9, 212, 200, 0.25); }
-    .summary-line.red-tint { background: rgba(241, 64, 53, 0.07); }
-    .summary-key   { font-size: 12px; font-weight: 500; color: #565F66; }
-    .summary-key.strong { font-weight: 700; color: #000; font-size: 13px; }
-    .summary-val   { font-size: 13px; font-weight: 600; color: #000; }
-    .summary-val.big    { font-size: 15px; font-weight: 800; color: #09D4C8; }
-    .summary-val.red    { color: #F14035; }
+    /* PANEL A */
+    .sum-line { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 7px; margin-bottom: 5px; }
+    .sum-line.neutral  { background: rgba(247,248,249,0.9); }
+    .sum-line.featured { background: rgba(9,212,200,0.1); border: 1px solid rgba(9,212,200,0.25); }
+    .sum-line.red-bg   { background: rgba(241,64,53,0.07); }
+    .sum-line.eff-rev  { background: rgba(9,212,200,0.13); border: 1px solid rgba(9,212,200,0.3); padding: 10px; margin-bottom: 5px; }
+    .sum-key  { font-size: 12px; font-weight: 500; color: #565F66; }
+    .sum-key.bold { font-weight: 700; color: #000; font-size: 13px; }
+    .sum-val  { font-size: 13px; font-weight: 600; color: #000; }
+    .sum-val.red  { color: #F14035; }
+    .sum-val.big  { font-size: 15px; font-weight: 800; color: #09D4C8; }
+    .pt-panel { margin-top: 12px; background: rgba(20,166,248,0.06); border: 1px solid rgba(20,166,248,0.2); border-radius: 8px; padding: 12px; }
+    .pt-panel-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #14A6F8; margin-bottom: 8px; }
+    .pt-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+    .pt-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; border-top: 1px solid rgba(20,166,248,0.2); padding-top: 6px; margin-top: 4px; }
 
-    /* ── PANEL B: COST BREAKDOWN ── */
-    .chart-wrap {
-      position: relative;
-      width: 170px;
-      height: 170px;
-      margin: 0 auto;
-    }
-    .chart-center {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      pointer-events: none;
-    }
-    .chart-center-label {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: #565F66;
-    }
-    .chart-center-val {
-      font-size: 14px;
-      font-weight: 800;
-      color: #000;
-    }
-    .legend-row {
-      display: flex;
-      justify-content: center;
-      gap: 18px;
-      margin-top: 10px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: #565F66;
-    }
-    .legend-dot {
-      width: 9px; height: 9px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-    .b-metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .metric-box {
-      background: rgba(247, 248, 249, 0.9);
-      border-radius: 8px;
-      padding: 11px 10px;
-      text-align: center;
-    }
-    .metric-box.accent { background: rgba(9, 212, 200, 0.08); }
-    .metric-box-label {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #565F66;
-      margin-bottom: 4px;
-    }
-    .metric-box-label.accent { color: #09D4C8; }
-    .metric-box-value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #000;
-    }
+    /* PANEL B */
+    .chart-wrap { position: relative; width: 160px; height: 160px; margin: 0 auto; }
+    .chart-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
+    .chart-center-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #565F66; }
+    .chart-center-val { font-size: 13px; font-weight: 800; color: #000; }
+    .legend-row { display: flex; justify-content: center; gap: 16px; margin-top: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #565F66; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+    .b-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .mbox { background: rgba(247,248,249,0.9); border-radius: 8px; padding: 10px; text-align: center; }
+    .mbox.acc { background: rgba(9,212,200,0.08); }
+    .mbox-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #565F66; margin-bottom: 3px; }
+    .mbox-lbl.acc { color: #09D4C8; }
+    .mbox-val { font-size: 15px; font-weight: 700; color: #000; }
 
-    /* ── PANEL C: SENSITIVITY TABLE ── */
-    .sensitivity-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    .sensitivity-table th {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: #565F66;
-      padding: 8px 12px;
-      text-align: right;
-      border-bottom: 1px solid #e2e8f0;
-      white-space: nowrap;
-    }
-    .sensitivity-table th:first-child { text-align: left; }
-    .sensitivity-table td {
-      padding: 9px 12px;
-      text-align: right;
-      border-bottom: 1px solid rgba(226, 232, 240, 0.5);
-      color: #565F66;
-      white-space: nowrap;
-    }
-    .sensitivity-table td:first-child {
-      text-align: left;
-      font-weight: 600;
-      color: #000;
-    }
-    .sensitivity-table tr { border-left: 3px solid transparent; }
-    .sensitivity-table tr.row-current { background: rgba(9, 212, 200, 0.05); }
-    .sensitivity-table tr.row-current td:first-child { color: #09D4C8; }
-    .sensitivity-table tr.row-red    { border-left-color: #F14035; }
-    .sensitivity-table tr.row-yellow { border-left-color: #F8C220; }
-    .sensitivity-table tr.row-green  { border-left-color: #00C371; }
-    .capped { font-size: 9px; font-weight: 700; color: #09D4C8; margin-left: 4px; }
+    /* PANEL C */
+    .sens-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .sens-table th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #565F66; padding: 7px 9px; text-align: right; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    .sens-table th:first-child { text-align: left; }
+    .sens-table td { padding: 8px 9px; text-align: right; border-bottom: 1px solid rgba(226,232,240,0.5); color: #565F66; white-space: nowrap; }
+    .sens-table td:first-child { text-align: left; font-weight: 600; color: #000; }
+    .sens-table tr { border-left: 3px solid transparent; }
+    .sens-table tr.cur { background: rgba(9,212,200,0.05); }
+    .sens-table tr.cur td:first-child { color: #09D4C8; }
+    .sens-table tr.r-red    { border-left-color: #F14035; }
+    .sens-table tr.r-yellow { border-left-color: #F8C220; }
+    .sens-table tr.r-green  { border-left-color: #00C371; }
 
-    /* ── PANEL D: PRICE ENGINE ── */
-    .target-input-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .target-input-row .input-field { width: 72px; }
-    .target-unit { font-size: 14px; font-weight: 600; color: #565F66; }
+    /* PANEL D */
+    .engine-result { background: rgba(9,212,200,0.07); border: 1px solid rgba(9,212,200,0.2); border-radius: 10px; padding: 20px 14px; text-align: center; margin-top: 4px; }
+    .engine-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #09D4C8; margin-bottom: 8px; }
+    .engine-val { font-size: 36px; font-weight: 800; color: #000; line-height: 1; }
+    .engine-sub { font-size: 11px; color: #565F66; margin-top: 6px; }
 
-    .engine-result {
-      background: rgba(9, 212, 200, 0.07);
-      border: 1px solid rgba(9, 212, 200, 0.2);
-      border-radius: 10px;
-      padding: 22px 16px;
-      text-align: center;
-    }
-    .engine-result-label {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #09D4C8;
-      margin-bottom: 8px;
-    }
-    .engine-result-value {
-      font-size: 38px;
-      font-weight: 800;
-      color: #000;
-      line-height: 1;
-    }
-    .engine-result-sub {
-      font-size: 11px;
-      color: #565F66;
-      margin-top: 6px;
-    }
-
-    /* ── RESPONSIVE ── */
     @media (max-width: 960px) {
-      .app-layout { flex-direction: column; }
+      .app-wrap { flex-direction: column; }
       .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; }
       .top-row, .bottom-row { grid-template-columns: 1fr; }
     }
@@ -352,422 +137,551 @@
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="header">
-    <div class="header-title">Clozd<span class="pipe">|</span>Price Scoping Calculator</div>
-    <div class="gm-badge" id="gmBadge">
-      <span class="gm-badge-label">Total Program GM%</span>
-      <span class="gm-badge-value" id="gmBadgeValue">—</span>
+<header class="header">
+  <div class="header-title">Clozd<span class="pipe">|</span>Price Scoping Calculator</div>
+  <div class="gm-badge" id="gmBadge" style="display:none;">
+    <span class="gm-badge-label">Total Program GM%</span>
+    <span class="gm-badge-value" id="gmBadgeValue">—</span>
+  </div>
+</header>
+
+<!-- BOOK SELECTION -->
+<div id="bookSelectScreen">
+  <div class="book-select-screen">
+    <h1>Choose a Price Book</h1>
+    <p>Select the pricing structure for this deal to begin scoping.</p>
+    <div class="book-cards">
+
+      <div class="book-card" onclick="selectBook('std2024')">
+        <div class="book-card-tag">Price Book</div>
+        <div class="book-card-name">Standard / 2024</div>
+        <div class="book-card-desc">Classic pricing with incentives bundled into interview rates.</div>
+        <ul class="book-card-features">
+          <li>7 software packages</li>
+          <li>Premium, Scale & Flex interviews</li>
+          <li>Incentives baked into price</li>
+        </ul>
+      </div>
+
+      <div class="book-card" onclick="selectBook('b2025')">
+        <div class="book-card-tag">Price Book</div>
+        <div class="book-card-name">2025</div>
+        <div class="book-card-desc">Updated pricing with customer pass-through incentives tracked separately.</div>
+        <ul class="book-card-features">
+          <li>7 software packages</li>
+          <li>Premium, Scale & Flex interviews</li>
+          <li>Pass-through incentives</li>
+          <li>SMB Starter: 40 free Flex included</li>
+        </ul>
+      </div>
+
+      <div class="book-card" onclick="selectBook('b2026')">
+        <div class="book-card-tag">Price Book</div>
+        <div class="book-card-name">2026</div>
+        <div class="book-card-desc">Latest pricing with updated packages including Enterprise tier.</div>
+        <ul class="book-card-features">
+          <li>7 software packages incl. Enterprise</li>
+          <li>Premium, Scale & Flex interviews</li>
+          <li>Incentives baked into price</li>
+        </ul>
+      </div>
+
+      <div class="book-card disabled">
+        <div class="book-card-tag soon">Coming Soon</div>
+        <div class="book-card-name">Full Pipeline</div>
+        <div class="book-card-desc">Custom scoping for complex multi-type pipeline programs.</div>
+        <ul class="book-card-features">
+          <li>Custom interview mix</li>
+          <li>Incentive cap support</li>
+          <li>Variable cost modeling</li>
+        </ul>
+      </div>
+
     </div>
-  </header>
+  </div>
+</div>
 
-  <div class="app-layout">
+<!-- APP LAYOUT -->
+<div id="appLayout" style="display:none;">
+  <div class="book-bar">
+    <span class="book-bar-label">Price Book</span>
+    <span class="book-bar-name" id="bookBarName">—</span>
+    <button class="book-bar-change" onclick="changeBook()">↩ Change</button>
+  </div>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="section-label">Interview Types</div>
+  <div class="app-wrap">
+    <aside class="sidebar" id="sidebar"></aside>
 
-      <!-- Live -->
-      <div class="interview-block">
-        <div class="interview-block-title">Live Interviews</div>
-        <div class="input-row">
-          <div>
-            <label class="input-label">Qty</label>
-            <input class="input-field" type="number" id="liveQty" value="0" min="0">
-          </div>
-          <div>
-            <label class="input-label">Price ($)</label>
-            <input class="input-field" type="number" id="livePrice" value="1000" min="0">
-          </div>
-          <div>
-            <label class="input-label">Incentive ($)</label>
-            <input class="input-field" type="number" id="liveInc" value="100" min="0">
-          </div>
-        </div>
-      </div>
-
-      <!-- Traditional Flex -->
-      <div class="interview-block">
-        <div class="interview-block-title">Traditional Flex</div>
-        <div class="input-row">
-          <div>
-            <label class="input-label">Qty</label>
-            <input class="input-field" type="number" id="tradQty" value="0" min="0">
-          </div>
-          <div>
-            <label class="input-label">Price ($)</label>
-            <input class="input-field" type="number" id="tradPrice" value="345" min="0">
-          </div>
-          <div>
-            <label class="input-label">Incentive ($)</label>
-            <input class="input-field" type="number" id="tradInc" value="50" min="0">
-          </div>
-        </div>
-      </div>
-
-      <!-- Self-Serve -->
-      <div class="interview-block">
-        <div class="interview-block-title">Self-Serve</div>
-        <div class="input-row">
-          <div>
-            <label class="input-label">Qty</label>
-            <input class="input-field" type="number" id="ssQty" value="0" min="0">
-          </div>
-          <div>
-            <label class="input-label">Price ($)</label>
-            <input class="input-field" type="number" id="ssPrice" value="0" disabled>
-          </div>
-          <div>
-            <label class="input-label">Incentive ($)</label>
-            <input class="input-field" type="number" id="ssInc" value="0" min="0">
-          </div>
-        </div>
-      </div>
-
-      <hr class="sidebar-divider">
-      <div class="section-label">Program Settings</div>
-
-      <div class="input-group">
-        <label class="input-label">Software Platform Fee ($)</label>
-        <input class="input-field" type="number" id="softwareFee" value="15000" min="0">
-      </div>
-
-      <div class="input-group">
-        <label class="input-label">Discount (%)</label>
-        <input class="input-field discount" type="number" id="discount" value="0" min="0" max="100">
-      </div>
-
-      <div class="input-group">
-        <label class="input-label">Incentive Cap ($)</label>
-        <input class="input-field" type="number" id="incentiveCap" value="35000" min="0">
-      </div>
-    </aside>
-
-    <!-- MAIN PANEL -->
     <main class="main-panel">
 
-      <!-- Top row: A + B -->
+      <!-- TOP ROW -->
       <div class="quadrant-row top-row">
 
         <!-- A: Deal Summary -->
         <div class="card">
-          <div class="section-label">A — Deal Summary</div>
-
-          <div class="summary-line neutral">
-            <span class="summary-key">Interview Revenue</span>
-            <span class="summary-val" id="aInterviewRev">$0</span>
+          <div class="card-label">A — Deal Summary</div>
+          <div class="sum-line neutral">
+            <span class="sum-key">Interview Revenue</span>
+            <span class="sum-val" id="aIntRev">—</span>
           </div>
-          <div class="summary-line neutral">
-            <span class="summary-key">Software Platform Fee</span>
-            <span class="summary-val" id="aSoftwareFee">$15,000</span>
+          <div class="sum-line neutral">
+            <span class="sum-key">Software Package Fee</span>
+            <span class="sum-val" id="aSoftFee">—</span>
           </div>
-          <div class="summary-line featured">
-            <span class="summary-key strong">Gross Revenue</span>
-            <span class="summary-val" id="aGrossRev">$15,000</span>
+          <div class="sum-line featured">
+            <span class="sum-key bold">Gross Revenue</span>
+            <span class="sum-val" id="aGrossRev">—</span>
           </div>
-          <div class="summary-line red-tint">
-            <span class="summary-key" style="color:#F14035;">Discount Amount</span>
-            <span class="summary-val red" id="aDiscountAmt">—</span>
+          <div class="sum-line red-bg">
+            <span class="sum-key" style="color:#F14035;">Discount Amount</span>
+            <span class="sum-val red" id="aDiscount">—</span>
           </div>
-          <div class="summary-line" style="background:rgba(9,212,200,0.12);border:1px solid rgba(9,212,200,0.28);border-radius:7px;margin-bottom:5px;padding:10px 11px;">
-            <span class="summary-key strong">Effective Revenue</span>
-            <span class="summary-val big" id="aEffectiveRev">$15,000</span>
+          <div class="sum-line eff-rev">
+            <span class="sum-key bold">Effective Revenue</span>
+            <span class="sum-val big" id="aEffRev">—</span>
+          </div>
+          <!-- 2025 pass-through panel -->
+          <div class="pt-panel" id="ptPanel" style="display:none;">
+            <div class="pt-panel-title">Customer Pass-Through Incentives</div>
+            <div class="pt-row"><span>Premium Incentives</span><span id="ptPrem">—</span></div>
+            <div class="pt-row"><span>Scale Incentives</span><span id="ptScale">—</span></div>
+            <div class="pt-row"><span>Flex Incentives</span><span id="ptFlex">—</span></div>
+            <div class="pt-total">
+              <span>Total Pass-Through</span>
+              <span style="color:#14A6F8;" id="ptTotal">—</span>
+            </div>
           </div>
         </div>
 
         <!-- B: Cost Breakdown -->
         <div class="card" style="display:flex;flex-direction:column;align-items:center;">
-          <div class="section-label" style="align-self:flex-start;">B — Cost Breakdown</div>
+          <div class="card-label" style="align-self:flex-start;">B — Cost Breakdown</div>
           <div class="chart-wrap">
             <canvas id="costChart"></canvas>
             <div class="chart-center">
-              <div class="chart-center-label">Total Cost</div>
-              <div class="chart-center-val" id="bChartCenter">—</div>
+              <div class="chart-center-lbl">Total Cost</div>
+              <div class="chart-center-val" id="bCenter">—</div>
             </div>
           </div>
-          <div class="legend-row">
-            <div class="legend-item">
-              <div class="legend-dot" style="background:#09D4C8;"></div>
-              Incentives
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background:#14A6F8;"></div>
-              Other Costs
-            </div>
-          </div>
+          <div class="legend-row" id="chartLegend"></div>
           <div class="b-metrics">
-            <div class="metric-box">
-              <div class="metric-box-label">Total Cost</div>
-              <div class="metric-box-value" id="bTotalCost">—</div>
+            <div class="mbox">
+              <div class="mbox-lbl">Total Cost</div>
+              <div class="mbox-val" id="bTotalCost">—</div>
             </div>
-            <div class="metric-box accent">
-              <div class="metric-box-label accent">GM $</div>
-              <div class="metric-box-value" id="bGmDollar">—</div>
+            <div class="mbox acc">
+              <div class="mbox-lbl acc">GM $</div>
+              <div class="mbox-val" id="bGmDollar">—</div>
             </div>
           </div>
         </div>
 
       </div>
 
-      <!-- Bottom row: C + D -->
+      <!-- BOTTOM ROW -->
       <div class="quadrant-row bottom-row">
 
-        <!-- C: Margin Sensitivity -->
+        <!-- C: Sensitivity -->
         <div class="card">
-          <div class="section-label">C — Margin Sensitivity</div>
+          <div class="card-label">C — Margin Sensitivity</div>
           <div style="overflow-x:auto;">
-            <table class="sensitivity-table">
-              <thead>
-                <tr>
-                  <th>Scenario</th>
-                  <th>Live</th>
-                  <th>Flex</th>
-                  <th>Total Revenue</th>
-                  <th>Total Cost</th>
-                  <th>GM%</th>
-                </tr>
-              </thead>
-              <tbody id="sensitivityBody"></tbody>
+            <table class="sens-table">
+              <thead id="sensHead"></thead>
+              <tbody id="sensBody"></tbody>
             </table>
           </div>
         </div>
 
         <!-- D: Price Engine -->
         <div class="card" style="display:flex;flex-direction:column;">
-          <div class="section-label">D — Price Engine</div>
-          <p style="font-size:11px;color:#565F66;margin-bottom:14px;line-height:1.5;">Find the minimum blended price per interview to hit your target margin at current volumes.</p>
-
-          <div class="target-input-row">
-            <label class="input-label" style="margin-bottom:0;">Target GM%</label>
-            <input class="input-field" type="number" id="targetGM" value="75" min="1" max="99" style="width:72px;">
-            <span class="target-unit">%</span>
+          <div class="card-label">D — Price Engine</div>
+          <p style="font-size:11px;color:#565F66;margin-bottom:12px;line-height:1.5;">Minimum blended price per interview to hit your target margin at current volumes.</p>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <label class="input-label" style="margin:0;white-space:nowrap;">Target GM%</label>
+            <input class="input-field" type="number" id="targetGM" value="75" min="1" max="99" style="width:68px;" oninput="update()">
+            <span style="font-size:13px;font-weight:600;color:#565F66;">%</span>
           </div>
-
           <div class="engine-result">
-            <div class="engine-result-label">Min. Blended Price / Interview</div>
-            <div class="engine-result-value" id="dResult">—</div>
-            <div class="engine-result-sub" id="dSub">Enter interview quantities to calculate</div>
+            <div class="engine-lbl">Min. Blended Price / Interview</div>
+            <div class="engine-val" id="dResult">—</div>
+            <div class="engine-sub" id="dSub">Select a price book to begin</div>
           </div>
         </div>
 
       </div>
-
     </main>
   </div>
+</div>
 
-  <script>
-    // ── CONSTANTS (internal only) ─────────────────────────────────────────────
-    const _FC  = 5905;
-    const _LAB = { live: 49, trad: 6, ss: 0 };
+<script>
+  const _FC  = 5905;
 
-    // ── HELPERS ───────────────────────────────────────────────────────────────
-    function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+  const BOOKS = {
+    std2024: {
+      label: 'Standard / 2024',
+      incentiveMode: 'baked',
+      packages: [
+        { name: 'Advanced',             fee: 30000 },
+        { name: 'Professional',         fee: 12500 },
+        { name: 'Essentials',           fee:  7500 },
+        { name: 'SMB',                  fee: 16000 },
+        { name: 'Pilot – Advanced',     fee:  7500 },
+        { name: 'Pilot – Professional', fee:  3125 },
+        { name: 'Pilot – Essentials',   fee:  1875 },
+      ],
+      types: [
+        { id: 'premium', label: 'Premium', price: 1399, labor: 49 },
+        { id: 'scale',   label: 'Scale',   price:  999, labor:  6 },
+        { id: 'flex',    label: 'Flex',    price:  499, labor:  0 },
+      ],
+    },
+    b2025: {
+      label: '2025',
+      incentiveMode: 'passthrough',
+      packages: [
+        { name: 'Advanced',             fee: 32000 },
+        { name: 'Professional',         fee: 14000 },
+        { name: 'Essentials',           fee:  8000 },
+        { name: 'SMB Starter',          fee: 16000, freeFlex: 40 },
+        { name: 'Pilot – Advanced',     fee: 10666 },
+        { name: 'Pilot – Professional', fee:  3125 },
+        { name: 'Pilot – Essentials',   fee:  2666 },
+      ],
+      types: [
+        { id: 'premium', label: 'Premium', price: 1399, labor: 49, incentive: 150 },
+        { id: 'scale',   label: 'Scale',   price:  799, labor:  6, incentive: 100 },
+        { id: 'flex',    label: 'Flex',    price:  199, labor:  0, incentive:  50 },
+      ],
+    },
+    b2026: {
+      label: '2026',
+      incentiveMode: 'baked',
+      packages: [
+        { name: 'Advanced',             fee: 25000 },
+        { name: 'Professional',         fee: 15000 },
+        { name: 'Essentials',           fee: 10000 },
+        { name: 'Enterprise',           fee: 40000 },
+        { name: 'Pilot – Advanced',     fee:  8333 },
+        { name: 'Pilot – Professional', fee:  5000 },
+        { name: 'Pilot – Essentials',   fee:  3333 },
+      ],
+      types: [
+        { id: 'premium', label: 'Premium', price: 1399, labor: 49 },
+        { id: 'scale',   label: 'Scale',   price:  799, labor:  6 },
+        { id: 'flex',    label: 'Flex',    price:  199, labor:  0 },
+      ],
+    },
+  };
 
-    function money(v) {
-      const abs = Math.abs(v);
-      const fmt = abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-      return v < 0 ? `-$${fmt}` : `$${fmt}`;
+  let activeBook = null;
+  let costChart  = null;
+
+  function g(id) { return document.getElementById(id); }
+  function nv(id) { const el = g(id); return el ? (parseFloat(el.value) || 0) : 0; }
+  function money(v) {
+    const abs = Math.abs(v);
+    const s = abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    return v < 0 ? `-$${s}` : `$${s}`;
+  }
+  function pct(v) { return isFinite(v) ? v.toFixed(1) + '%' : '—'; }
+  function gmColor(v) {
+    if (!isFinite(v)) return '#565F66';
+    if (v < 70) return '#F14035';
+    if (v > 85) return '#F8C220';
+    return '#00C371';
+  }
+
+  function selectBook(id) {
+    activeBook = id;
+    g('bookSelectScreen').style.display = 'none';
+    g('appLayout').style.display = 'block';
+    g('gmBadge').style.display = 'flex';
+    g('bookBarName').textContent = BOOKS[id].label;
+    renderSidebar();
+    initChart();
+    update();
+  }
+
+  function changeBook() {
+    activeBook = null;
+    g('bookSelectScreen').style.display = 'block';
+    g('appLayout').style.display = 'none';
+    g('gmBadge').style.display = 'none';
+  }
+
+  function renderSidebar() {
+    const book = BOOKS[activeBook];
+    let html = '';
+
+    // Step 1: Package
+    html += `
+      <div class="section-label"><span class="step-num">1</span>Software Package</div>
+      <select class="pkg-select" id="pkgSelect" onchange="onPkgChange()">
+        <option value="">— Select a package —</option>
+        ${book.packages.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
+      </select>
+      <div class="pkg-fee-pill" id="pkgFeePill" style="display:none;">
+        <span class="pkg-fee-pill-label">Platform Fee</span>
+        <span class="pkg-fee-pill-value" id="pkgFeeVal">—</span>
+      </div>
+      <div class="sidebar-divider"></div>
+    `;
+
+    // Step 2: Interview Quantities
+    html += `<div class="section-label"><span class="step-num">2</span>Interview Quantities</div>`;
+    book.types.forEach(t => {
+      html += `
+        <div class="interview-block">
+          <div class="interview-block-header">
+            <span class="interview-block-name">${t.label}</span>
+            <span class="interview-block-price">${money(t.price)}/ea</span>
+          </div>
+          <label class="input-label">Quantity</label>
+          <input class="input-field" type="number" id="qty_${t.id}" value="0" min="0" oninput="update()">
+          ${t.id === 'flex' && activeBook === 'b2025' ? `<div class="free-flex-note" id="freeFlexNote"></div>` : ''}
+        </div>
+      `;
+    });
+
+    // Step 3: Adjustments
+    html += `
+      <div class="sidebar-divider"></div>
+      <div class="section-label"><span class="step-num">3</span>Adjustments</div>
+      <div style="margin-bottom:10px;">
+        <label class="input-label">Discount (%)</label>
+        <input class="input-field discount" type="number" id="discountPct" value="0" min="0" max="100" oninput="update()">
+      </div>
+    `;
+
+    // 2025: pass-through summary in sidebar
+    if (book.incentiveMode === 'passthrough') {
+      html += `
+        <div class="passthrough-sidebar" id="ptSidebar">
+          <div class="passthrough-sidebar-title">Pass-Through Incentives (Customer Pays)</div>
+          <div class="passthrough-row"><span>Premium ($150/ea)</span><span id="ptSidePrem">$0</span></div>
+          <div class="passthrough-row"><span>Scale ($100/ea)</span><span id="ptSideScale">$0</span></div>
+          <div class="passthrough-row"><span>Flex ($50/ea)</span><span id="ptSideFlex">$0</span></div>
+          <div class="passthrough-total-row"><span>Total</span><span id="ptSideTotal" style="color:#14A6F8;">$0</span></div>
+        </div>
+      `;
     }
 
-    function pct(v) {
-      return isFinite(v) ? v.toFixed(1) + '%' : '—';
-    }
+    g('sidebar').innerHTML = html;
+  }
 
-    function gmColor(gmp) {
-      if (!isFinite(gmp)) return '#565F66';
-      if (gmp < 70)  return '#F14035';
-      if (gmp > 85)  return '#F8C220';
-      return '#00C371';
+  function onPkgChange() {
+    const book = BOOKS[activeBook];
+    const name = g('pkgSelect').value;
+    const pkg  = book.packages.find(p => p.name === name);
+    const pill = g('pkgFeePill');
+    if (pkg) {
+      g('pkgFeeVal').textContent = money(pkg.fee);
+      pill.style.display = 'flex';
+    } else {
+      pill.style.display = 'none';
     }
+    update();
+  }
 
-    // ── CHART INIT ────────────────────────────────────────────────────────────
-    let costChart = null;
+  function initChart() {
+    if (costChart) { costChart.destroy(); costChart = null; }
     try {
-      costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
+      costChart = new Chart(g('costChart').getContext('2d'), {
         type: 'doughnut',
         data: {
-          labels: ['Incentives', 'Other Costs'],
-          datasets: [{
-            data: [0, _FC],
-            backgroundColor: ['#09D4C8', '#14A6F8'],
-            borderWidth: 0,
-            hoverOffset: 6
-          }]
+          labels: ['Variable Labor', 'Fixed Costs'],
+          datasets: [{ data: [0, _FC], backgroundColor: ['#09D4C8', '#14A6F8'], borderWidth: 0, hoverOffset: 6 }]
         },
         options: {
           cutout: '68%',
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: { label: c => ` ${c.label}: ${money(c.raw)}` }
-            }
+            tooltip: { callbacks: { label: c => ` ${c.label}: ${money(c.raw)}` } }
           },
           animation: { duration: 250 }
         }
       });
-    } catch (e) {
-      document.getElementById('costChart').style.display = 'none';
+    } catch(e) {
+      g('costChart').style.display = 'none';
     }
+  }
 
-    // ── CORE CALC ─────────────────────────────────────────────────────────────
-    function calc() {
-      const liveQty   = n('liveQty');
-      const livePrice = n('livePrice');
-      const liveInc   = n('liveInc');
-      const tradQty   = n('tradQty');
-      const tradPrice = n('tradPrice');
-      const tradInc   = n('tradInc');
-      const ssQty     = n('ssQty');
-      const ssInc     = n('ssInc');
-      const software  = n('softwareFee');
-      const discPct   = n('discount') / 100;
-      const incCap    = n('incentiveCap');
+  function calc() {
+    const book   = BOOKS[activeBook];
+    const pkgName = g('pkgSelect') ? g('pkgSelect').value : '';
+    const pkg    = book.packages.find(p => p.name === pkgName);
+    const software = pkg ? pkg.fee : 0;
+    const freeFlex = (activeBook === 'b2025' && pkg?.freeFlex) ? pkg.freeFlex : 0;
+    const discPct  = nv('discountPct') / 100;
 
-      // Revenue
-      const interviewRev  = (liveQty * livePrice) + (tradQty * tradPrice); // ssPrice = $0
-      const grossRev      = interviewRev + software;
-      const effectiveRev  = grossRev * (1 - discPct);
-      const discountAmt   = grossRev - effectiveRev;
+    const qtys = {};
+    book.types.forEach(t => { qtys[t.id] = nv(`qty_${t.id}`); });
 
-      // Costs
-      const rawIncentives = (liveQty * liveInc) + (tradQty * tradInc) + (ssQty * ssInc);
-      const effIncentives = incCap > 0 ? Math.min(rawIncentives, incCap) : rawIncentives;
-      const isCapped      = incCap > 0 && rawIncentives > incCap;
-      const varLabor      = (liveQty * _LAB.live) + (tradQty * _LAB.trad);
-      const totalCost     = _FC + effIncentives + varLabor;
+    const billedFlex = Math.max(0, (qtys.flex || 0) - freeFlex);
 
-      // Margin
-      const gmDollar  = effectiveRev - totalCost;
-      const gmPercent = effectiveRev > 0 ? (gmDollar / effectiveRev) * 100 : NaN;
-
-      return {
-        liveQty, livePrice, liveInc,
-        tradQty, tradPrice, tradInc,
-        ssQty, ssInc, software,
-        discPct, incCap,
-        interviewRev, grossRev, effectiveRev, discountAmt,
-        rawIncentives, effIncentives, isCapped,
-        varLabor, totalCost,
-        gmDollar, gmPercent
-      };
-    }
-
-    // ── SENSITIVITY ROW ───────────────────────────────────────────────────────
-    function sensitivityRow(m, multiplier, label, isCurrent) {
-      const liveCount = Math.round(m.liveQty * multiplier);
-      const tradCount = Math.round(m.tradQty * multiplier);
-      const ssCount   = Math.round(m.ssQty   * multiplier);
-
-      const rawInc = (liveCount * m.liveInc) + (tradCount * m.tradInc) + (ssCount * m.ssInc);
-      const effInc = m.incCap > 0 ? Math.min(rawInc, m.incCap) : rawInc;
-      const capped = m.incCap > 0 && rawInc > m.incCap;
-      const lab    = (liveCount * _LAB.live) + (tradCount * _LAB.trad);
-      const cost   = _FC + effInc + lab;
-      const gm$    = m.effectiveRev - cost;
-      const gmp    = m.effectiveRev > 0 ? (gm$ / m.effectiveRev) * 100 : NaN;
-
-      let rowClass = isCurrent ? 'row-current' : '';
-      if (isFinite(gmp)) {
-        if      (gmp < 70) rowClass += ' row-red';
-        else if (gmp > 85) rowClass += ' row-yellow';
-        else               rowClass += ' row-green';
-      }
-
-      const cappedBadge = capped ? `<span class="capped">[Capped]</span>` : '';
-      const gmStyle     = `font-weight:700;color:${gmColor(gmp)}`;
-
-      return `<tr class="${rowClass.trim()}">
-        <td>${label}</td>
-        <td>${liveCount}</td>
-        <td>${tradCount}</td>
-        <td>${money(m.effectiveRev)}</td>
-        <td>${money(cost)}${cappedBadge}</td>
-        <td style="${gmStyle}">${pct(gmp)}</td>
-      </tr>`;
-    }
-
-    // ── UPDATE UI ─────────────────────────────────────────────────────────────
-    function update() {
-      const m = calc();
-
-      // Panel A
-      document.getElementById('aInterviewRev').textContent = money(m.interviewRev);
-      document.getElementById('aSoftwareFee').textContent  = money(m.software);
-      document.getElementById('aGrossRev').textContent     = money(m.grossRev);
-      document.getElementById('aDiscountAmt').textContent  = m.discPct > 0 ? money(-m.discountAmt) : '—';
-      document.getElementById('aEffectiveRev').textContent = money(m.effectiveRev);
-
-      // Panel B
-      const otherCosts = m.varLabor + _FC;
-      if (costChart) {
-        costChart.data.datasets[0].data = [m.effIncentives, otherCosts];
-        costChart.update();
-      }
-      document.getElementById('bChartCenter').textContent = money(m.totalCost);
-      document.getElementById('bTotalCost').textContent   = money(m.totalCost);
-      const bGmEl = document.getElementById('bGmDollar');
-      bGmEl.textContent  = money(m.gmDollar);
-      bGmEl.style.color  = m.gmDollar >= 0 ? '#00C371' : '#F14035';
-
-      // Header badge
-      const badge     = document.getElementById('gmBadge');
-      const badgeVal  = document.getElementById('gmBadgeValue');
-      const badgeLbl  = badge.querySelector('.gm-badge-label');
-      const color     = isFinite(m.gmPercent) ? gmColor(m.gmPercent) : '#09D4C8';
-      badgeVal.textContent    = isFinite(m.gmPercent) ? m.gmPercent.toFixed(1) + '%' : '—';
-      badgeVal.style.color    = color;
-      badgeLbl.style.color    = color;
-      badge.style.borderColor = color;
-      badge.style.background  = color + '1a';
-
-      // Panel C — sensitivity table
-      const rows = [
-        { mult: 0.75, label: '−25% Volume' },
-        { mult: 1.00, label: 'Current',      current: true },
-        { mult: 1.25, label: '+25% Volume' },
-        { mult: 1.50, label: '+50% Volume' },
-        { mult: 2.00, label: '+100% Volume' }
-      ];
-      document.getElementById('sensitivityBody').innerHTML =
-        rows.map(r => sensitivityRow(m, r.mult, r.label, r.current || false)).join('');
-
-      // Panel D — price engine back-solve
-      const totalInt = m.liveQty + m.tradQty + m.ssQty;
-      const target   = n('targetGM') / 100;
-      const resultEl = document.getElementById('dResult');
-      const subEl    = document.getElementById('dSub');
-
-      if (totalInt === 0) {
-        resultEl.textContent = '—';
-        subEl.textContent    = 'Enter interview quantities to calculate';
-      } else if (target <= 0 || target >= 1) {
-        resultEl.textContent = '—';
-        subEl.textContent    = 'Target GM% must be between 1% and 99%';
-      } else {
-        // Back-solve: effectiveRev = totalCost / (1 - target)
-        // effectiveRev = (interviews × P + software) × (1 - discount)
-        // Solve for P:
-        const reqEffRev  = m.totalCost / (1 - target);
-        const reqRaw     = reqEffRev / (1 - m.discPct);
-        const reqIntRev  = reqRaw - m.software;
-        const minPrice   = reqIntRev / totalInt;
-
-        if (minPrice < 0) {
-          resultEl.textContent = 'N/A';
-          subEl.textContent    = 'Software fee alone covers target GM at current costs';
-        } else {
-          resultEl.textContent = money(Math.ceil(minPrice));
-          subEl.textContent    = `Across ${totalInt} interview${totalInt !== 1 ? 's' : ''} at ${(target * 100).toFixed(0)}% target`;
-        }
-      }
-    }
-
-    // ── LISTENERS ─────────────────────────────────────────────────────────────
-    document.querySelectorAll('input:not([disabled])').forEach(el => {
-      el.addEventListener('input', update);
+    // Revenue
+    let intRev = 0;
+    book.types.forEach(t => {
+      const q = t.id === 'flex' ? billedFlex : (qtys[t.id] || 0);
+      intRev += q * t.price;
     });
+    const grossRev    = intRev + software;
+    const effectiveRev = grossRev * (1 - discPct);
+    const discountAmt  = grossRev - effectiveRev;
 
-    update();
-  </script>
+    // Labor (always)
+    let varLabor = 0;
+    book.types.forEach(t => { varLabor += (qtys[t.id] || 0) * t.labor; });
+
+    // Pass-through (2025 only)
+    const pt = {};
+    let ptTotal = 0;
+    if (book.incentiveMode === 'passthrough') {
+      book.types.forEach(t => {
+        pt[t.id] = (qtys[t.id] || 0) * (t.incentive || 0);
+        ptTotal += pt[t.id];
+      });
+    }
+
+    const totalCost = _FC + varLabor;
+    const gmDollar  = effectiveRev - totalCost;
+    const gmPercent = effectiveRev > 0 ? (gmDollar / effectiveRev) * 100 : NaN;
+
+    return { book, pkg, software, freeFlex, discPct, qtys, billedFlex, intRev, grossRev, effectiveRev, discountAmt, varLabor, totalCost, pt, ptTotal, gmDollar, gmPercent };
+  }
+
+  function sensRow(m, mult, label, isCur) {
+    const book = m.book;
+    const sq = {};
+    book.types.forEach(t => { sq[t.id] = Math.round((m.qtys[t.id] || 0) * mult); });
+
+    let varLabor = 0;
+    book.types.forEach(t => { varLabor += sq[t.id] * t.labor; });
+    const cost = _FC + varLabor;
+    const gm$  = m.effectiveRev - cost;
+    const gmp  = m.effectiveRev > 0 ? (gm$ / m.effectiveRev) * 100 : NaN;
+
+    let cls = isCur ? 'cur' : '';
+    if (isFinite(gmp)) cls += gmp < 70 ? ' r-red' : gmp > 85 ? ' r-yellow' : ' r-green';
+
+    return `<tr class="${cls.trim()}">
+      <td>${label}</td>
+      <td>${sq.premium || 0}</td>
+      <td>${sq.scale || 0}</td>
+      <td>${sq.flex || 0}</td>
+      <td>${money(m.effectiveRev)}</td>
+      <td>${money(cost)}</td>
+      <td style="font-weight:700;color:${gmColor(gmp)}">${pct(gmp)}</td>
+    </tr>`;
+  }
+
+  function update() {
+    if (!activeBook) return;
+    const m = calc();
+
+    // Free flex note
+    const ffNote = g('freeFlexNote');
+    if (ffNote && m.freeFlex > 0) {
+      const used = Math.min(m.qtys.flex || 0, m.freeFlex);
+      const rem  = Math.max(0, m.freeFlex - (m.qtys.flex || 0));
+      ffNote.textContent = rem > 0
+        ? `${used} of ${m.freeFlex} free included (${rem} remaining)`
+        : `${m.freeFlex} free included · ${(m.qtys.flex||0) - m.freeFlex} billed`;
+    }
+
+    // Pass-through sidebar
+    if (m.book.incentiveMode === 'passthrough') {
+      if (g('ptSidePrem'))  g('ptSidePrem').textContent  = money(m.pt.premium || 0);
+      if (g('ptSideScale')) g('ptSideScale').textContent = money(m.pt.scale   || 0);
+      if (g('ptSideFlex'))  g('ptSideFlex').textContent  = money(m.pt.flex    || 0);
+      if (g('ptSideTotal')) g('ptSideTotal').textContent = money(m.ptTotal);
+    }
+
+    // Panel A
+    g('aIntRev').textContent  = money(m.intRev);
+    g('aSoftFee').textContent = money(m.software);
+    g('aGrossRev').textContent = money(m.grossRev);
+    g('aDiscount').textContent = m.discPct > 0 ? money(-m.discountAmt) : '—';
+    g('aEffRev').textContent  = money(m.effectiveRev);
+
+    const ptPanel = g('ptPanel');
+    if (m.book.incentiveMode === 'passthrough') {
+      ptPanel.style.display = 'block';
+      g('ptPrem').textContent  = money(m.pt.premium || 0);
+      g('ptScale').textContent = money(m.pt.scale   || 0);
+      g('ptFlex').textContent  = money(m.pt.flex    || 0);
+      g('ptTotal').textContent = money(m.ptTotal);
+    } else {
+      ptPanel.style.display = 'none';
+    }
+
+    // Panel B
+    if (costChart) {
+      costChart.data.datasets[0].data = [m.varLabor, _FC];
+      costChart.update();
+    }
+    g('bCenter').textContent   = money(m.totalCost);
+    g('bTotalCost').textContent = money(m.totalCost);
+    const bGm = g('bGmDollar');
+    bGm.textContent = money(m.gmDollar);
+    bGm.style.color = m.gmDollar >= 0 ? '#00C371' : '#F14035';
+
+    g('chartLegend').innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#09D4C8;"></div>Variable Labor</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#14A6F8;"></div>Fixed Costs</div>
+    `;
+
+    // Header badge
+    const badge = g('gmBadge');
+    const bv    = g('gmBadgeValue');
+    const bl    = badge.querySelector('.gm-badge-label');
+    const col   = isFinite(m.gmPercent) ? gmColor(m.gmPercent) : '#09D4C8';
+    bv.textContent = isFinite(m.gmPercent) ? m.gmPercent.toFixed(1) + '%' : '—';
+    bv.style.color = col; bl.style.color = col;
+    badge.style.borderColor = col;
+    badge.style.background  = col + '1a';
+
+    // Panel C
+    g('sensHead').innerHTML = `<tr>
+      <th>Scenario</th><th>Prem</th><th>Scale</th><th>Flex</th>
+      <th>Revenue</th><th>Cost</th><th>GM%</th>
+    </tr>`;
+    const rows = [
+      { mult: 0.75, label: '−25% Vol' },
+      { mult: 1.00, label: 'Current', cur: true },
+      { mult: 1.25, label: '+25% Vol' },
+      { mult: 1.50, label: '+50% Vol' },
+      { mult: 2.00, label: '+100% Vol' },
+    ];
+    g('sensBody').innerHTML = rows.map(r => sensRow(m, r.mult, r.label, r.cur || false)).join('');
+
+    // Panel D
+    const totalInt   = Object.values(m.qtys).reduce((a, b) => a + b, 0);
+    const billableInt = (m.qtys.premium || 0) + (m.qtys.scale || 0) + m.billedFlex;
+    const target     = nv('targetGM') / 100;
+    const rEl = g('dResult'), sEl = g('dSub');
+
+    if (totalInt === 0) {
+      rEl.textContent = '—'; sEl.textContent = 'Enter interview quantities to calculate';
+    } else if (target <= 0 || target >= 1) {
+      rEl.textContent = '—'; sEl.textContent = 'Target GM% must be between 1–99%';
+    } else {
+      const dFactor   = 1 - m.discPct;
+      const reqEffRev = m.totalCost / (1 - target);
+      const reqRaw    = dFactor > 0 ? reqEffRev / dFactor : reqEffRev;
+      const reqIntRev = reqRaw - m.software;
+      const denom     = billableInt > 0 ? billableInt : totalInt;
+      const minPrice  = reqIntRev / denom;
+
+      if (minPrice < 0) {
+        rEl.textContent = 'N/A';
+        sEl.textContent = 'Software fee alone covers target GM at current costs';
+      } else {
+        rEl.textContent = money(Math.ceil(minPrice));
+        sEl.textContent = `Across ${denom} billed interview${denom !== 1 ? 's' : ''} at ${(target*100).toFixed(0)}% target`;
+      }
+    }
+  }
+</script>
 </body>
 </html>
