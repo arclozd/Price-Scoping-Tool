@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clozd | Price Scoping Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #FFFFFF;
+      color: #565F66;
+      min-height: 100vh;
+      font-size: 13px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #000000;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title {
+      font-size: 17px;
+      font-weight: 800;
+      font-style: italic;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      letter-spacing: 0.06em;
+    }
+    .header-title .pipe { color: #09D4C8; margin: 0 6px; }
+
+    .gm-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1.5px solid #09D4C8;
+      border-radius: 24px;
+      padding: 6px 18px;
+      background: rgba(9, 212, 200, 0.1);
+      transition: all 0.25s;
+    }
+    .gm-badge-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #09D4C8;
+    }
+    .gm-badge-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #09D4C8;
+      transition: color 0.25s;
+    }
+
+    /* ── LAYOUT ── */
+    .app-layout {
+      display: flex;
+      max-width: 1280px;
+      margin: 0 auto;
+      min-height: calc(100vh - 53px);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 284px;
+      flex-shrink: 0;
+      background: #F7F8F9;
+      border-right: 1px solid #e2e8f0;
+      padding: 24px 18px;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      color: #09D4C8;
+      margin-bottom: 12px;
+    }
+
+    .interview-block {
+      background: rgba(9, 212, 200, 0.06);
+      border: 1px solid rgba(9, 212, 200, 0.18);
+      border-radius: 8px;
+      padding: 13px 12px 10px;
+      margin-bottom: 10px;
+    }
+    .interview-block-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #000000;
+      margin-bottom: 10px;
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 7px;
+    }
+    .input-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: #565F66;
+      margin-bottom: 3px;
+      letter-spacing: 0.03em;
+    }
+    .input-field {
+      width: 100%;
+      background: #F7F8F9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 7px 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #000000;
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+    .input-field::-webkit-outer-spin-button,
+    .input-field::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .input-field:focus { border-color: #09D4C8; }
+    .input-field:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      background: #eef0f2;
+    }
+    .input-field.discount {
+      border-color: rgba(241, 64, 53, 0.35);
+      color: #F14035;
+    }
+    .input-field.discount:focus { border-color: #F14035; }
+
+    .sidebar-divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 18px 0;
+    }
+    .input-group { margin-bottom: 13px; }
+
+    /* ── MAIN PANEL ── */
+    .main-panel {
+      flex: 1;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      padding: 20px;
+    }
+
+    .quadrant-row {
+      display: grid;
+      gap: 20px;
+    }
+    .top-row    { grid-template-columns: 55fr 45fr; }
+    .bottom-row { grid-template-columns: 60fr 40fr; }
+
+    /* ── PANEL A: DEAL SUMMARY ── */
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 11px;
+      border-radius: 7px;
+      margin-bottom: 5px;
+    }
+    .summary-line.neutral  { background: rgba(247, 248, 249, 0.9); }
+    .summary-line.featured { background: rgba(9, 212, 200, 0.1); border: 1px solid rgba(9, 212, 200, 0.25); }
+    .summary-line.red-tint { background: rgba(241, 64, 53, 0.07); }
+    .summary-key   { font-size: 12px; font-weight: 500; color: #565F66; }
+    .summary-key.strong { font-weight: 700; color: #000; font-size: 13px; }
+    .summary-val   { font-size: 13px; font-weight: 600; color: #000; }
+    .summary-val.big    { font-size: 15px; font-weight: 800; color: #09D4C8; }
+    .summary-val.red    { color: #F14035; }
+
+    /* ── PANEL B: COST BREAKDOWN ── */
+    .chart-wrap {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      margin: 0 auto;
+    }
+    .chart-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .chart-center-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #565F66;
+    }
+    .chart-center-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: #000;
+    }
+    .legend-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 10px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #565F66;
+    }
+    .legend-dot {
+      width: 9px; height: 9px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .b-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .metric-box {
+      background: rgba(247, 248, 249, 0.9);
+      border-radius: 8px;
+      padding: 11px 10px;
+      text-align: center;
+    }
+    .metric-box.accent { background: rgba(9, 212, 200, 0.08); }
+    .metric-box-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #565F66;
+      margin-bottom: 4px;
+    }
+    .metric-box-label.accent { color: #09D4C8; }
+    .metric-box-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    /* ── PANEL C: SENSITIVITY TABLE ── */
+    .sensitivity-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .sensitivity-table th {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #565F66;
+      padding: 8px 12px;
+      text-align: right;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .sensitivity-table th:first-child { text-align: left; }
+    .sensitivity-table td {
+      padding: 9px 12px;
+      text-align: right;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+      color: #565F66;
+      white-space: nowrap;
+    }
+    .sensitivity-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: #000;
+    }
+    .sensitivity-table tr { border-left: 3px solid transparent; }
+    .sensitivity-table tr.row-current { background: rgba(9, 212, 200, 0.05); }
+    .sensitivity-table tr.row-current td:first-child { color: #09D4C8; }
+    .sensitivity-table tr.row-red    { border-left-color: #F14035; }
+    .sensitivity-table tr.row-yellow { border-left-color: #F8C220; }
+    .sensitivity-table tr.row-green  { border-left-color: #00C371; }
+    .capped { font-size: 9px; font-weight: 700; color: #09D4C8; margin-left: 4px; }
+
+    /* ── PANEL D: PRICE ENGINE ── */
+    .target-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .target-input-row .input-field { width: 72px; }
+    .target-unit { font-size: 14px; font-weight: 600; color: #565F66; }
+
+    .engine-result {
+      background: rgba(9, 212, 200, 0.07);
+      border: 1px solid rgba(9, 212, 200, 0.2);
+      border-radius: 10px;
+      padding: 22px 16px;
+      text-align: center;
+    }
+    .engine-result-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #09D4C8;
+      margin-bottom: 8px;
+    }
+    .engine-result-value {
+      font-size: 38px;
+      font-weight: 800;
+      color: #000;
+      line-height: 1;
+    }
+    .engine-result-sub {
+      font-size: 11px;
+      color: #565F66;
+      margin-top: 6px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      .app-layout { flex-direction: column; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; }
+      .top-row, .bottom-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-title">Clozd<span class="pipe">|</span>Price Scoping Calculator</div>
+    <div class="gm-badge" id="gmBadge">
+      <span class="gm-badge-label">Total Program GM%</span>
+      <span class="gm-badge-value" id="gmBadgeValue">—</span>
+    </div>
+  </header>
+
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="section-label">Interview Types</div>
+
+      <!-- Live -->
+      <div class="interview-block">
+        <div class="interview-block-title">Live Interviews</div>
+        <div class="input-row">
+          <div>
+            <label class="input-label">Qty</label>
+            <input class="input-field" type="number" id="liveQty" value="0" min="0">
+          </div>
+          <div>
+            <label class="input-label">Price ($)</label>
+            <input class="input-field" type="number" id="livePrice" value="1000" min="0">
+          </div>
+          <div>
+            <label class="input-label">Incentive ($)</label>
+            <input class="input-field" type="number" id="liveInc" value="100" min="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Traditional Flex -->
+      <div class="interview-block">
+        <div class="interview-block-title">Traditional Flex</div>
+        <div class="input-row">
+          <div>
+            <label class="input-label">Qty</label>
+            <input class="input-field" type="number" id="tradQty" value="0" min="0">
+          </div>
+          <div>
+            <label class="input-label">Price ($)</label>
+            <input class="input-field" type="number" id="tradPrice" value="345" min="0">
+          </div>
+          <div>
+            <label class="input-label">Incentive ($)</label>
+            <input class="input-field" type="number" id="tradInc" value="50" min="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Self-Serve -->
+      <div class="interview-block">
+        <div class="interview-block-title">Self-Serve</div>
+        <div class="input-row">
+          <div>
+            <label class="input-label">Qty</label>
+            <input class="input-field" type="number" id="ssQty" value="0" min="0">
+          </div>
+          <div>
+            <label class="input-label">Price ($)</label>
+            <input class="input-field" type="number" id="ssPrice" value="0" disabled>
+          </div>
+          <div>
+            <label class="input-label">Incentive ($)</label>
+            <input class="input-field" type="number" id="ssInc" value="0" min="0">
+          </div>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider">
+      <div class="section-label">Program Settings</div>
+
+      <div class="input-group">
+        <label class="input-label">Software Platform Fee ($)</label>
+        <input class="input-field" type="number" id="softwareFee" value="15000" min="0">
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Discount (%)</label>
+        <input class="input-field discount" type="number" id="discount" value="0" min="0" max="100">
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Incentive Cap ($)</label>
+        <input class="input-field" type="number" id="incentiveCap" value="35000" min="0">
+      </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="main-panel">
+
+      <!-- Top row: A + B -->
+      <div class="quadrant-row top-row">
+
+        <!-- A: Deal Summary -->
+        <div class="card">
+          <div class="section-label">A — Deal Summary</div>
+
+          <div class="summary-line neutral">
+            <span class="summary-key">Interview Revenue</span>
+            <span class="summary-val" id="aInterviewRev">$0</span>
+          </div>
+          <div class="summary-line neutral">
+            <span class="summary-key">Software Platform Fee</span>
+            <span class="summary-val" id="aSoftwareFee">$15,000</span>
+          </div>
+          <div class="summary-line featured">
+            <span class="summary-key strong">Gross Revenue</span>
+            <span class="summary-val" id="aGrossRev">$15,000</span>
+          </div>
+          <div class="summary-line red-tint">
+            <span class="summary-key" style="color:#F14035;">Discount Amount</span>
+            <span class="summary-val red" id="aDiscountAmt">—</span>
+          </div>
+          <div class="summary-line" style="background:rgba(9,212,200,0.12);border:1px solid rgba(9,212,200,0.28);border-radius:7px;margin-bottom:5px;padding:10px 11px;">
+            <span class="summary-key strong">Effective Revenue</span>
+            <span class="summary-val big" id="aEffectiveRev">$15,000</span>
+          </div>
+        </div>
+
+        <!-- B: Cost Breakdown -->
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;">
+          <div class="section-label" style="align-self:flex-start;">B — Cost Breakdown</div>
+          <div class="chart-wrap">
+            <canvas id="costChart"></canvas>
+            <div class="chart-center">
+              <div class="chart-center-label">Total Cost</div>
+              <div class="chart-center-val" id="bChartCenter">—</div>
+            </div>
+          </div>
+          <div class="legend-row">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#09D4C8;"></div>
+              Incentives
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#14A6F8;"></div>
+              Other Costs
+            </div>
+          </div>
+          <div class="b-metrics">
+            <div class="metric-box">
+              <div class="metric-box-label">Total Cost</div>
+              <div class="metric-box-value" id="bTotalCost">—</div>
+            </div>
+            <div class="metric-box accent">
+              <div class="metric-box-label accent">GM $</div>
+              <div class="metric-box-value" id="bGmDollar">—</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom row: C + D -->
+      <div class="quadrant-row bottom-row">
+
+        <!-- C: Margin Sensitivity -->
+        <div class="card">
+          <div class="section-label">C — Margin Sensitivity</div>
+          <div style="overflow-x:auto;">
+            <table class="sensitivity-table">
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>Live</th>
+                  <th>Flex</th>
+                  <th>Total Revenue</th>
+                  <th>Total Cost</th>
+                  <th>GM%</th>
+                </tr>
+              </thead>
+              <tbody id="sensitivityBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- D: Price Engine -->
+        <div class="card" style="display:flex;flex-direction:column;">
+          <div class="section-label">D — Price Engine</div>
+          <p style="font-size:11px;color:#565F66;margin-bottom:14px;line-height:1.5;">Find the minimum blended price per interview to hit your target margin at current volumes.</p>
+
+          <div class="target-input-row">
+            <label class="input-label" style="margin-bottom:0;">Target GM%</label>
+            <input class="input-field" type="number" id="targetGM" value="75" min="1" max="99" style="width:72px;">
+            <span class="target-unit">%</span>
+          </div>
+
+          <div class="engine-result">
+            <div class="engine-result-label">Min. Blended Price / Interview</div>
+            <div class="engine-result-value" id="dResult">—</div>
+            <div class="engine-result-sub" id="dSub">Enter interview quantities to calculate</div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ── CONSTANTS (internal only) ─────────────────────────────────────────────
+    const _FC  = 5905;
+    const _LAB = { live: 49, trad: 6, ss: 0 };
+
+    // ── CHART INIT ────────────────────────────────────────────────────────────
+    const costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Incentives', 'Other Costs'],
+        datasets: [{
+          data: [0, _FC],
+          backgroundColor: ['#09D4C8', '#14A6F8'],
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: c => ` ${c.label}: ${money(c.raw)}` }
+          }
+        },
+        animation: { duration: 250 }
+      }
+    });
+
+    // ── HELPERS ───────────────────────────────────────────────────────────────
+    function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+    function money(v) {
+      const abs = Math.abs(v);
+      const fmt = abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      return v < 0 ? `-$${fmt}` : `$${fmt}`;
+    }
+
+    function pct(v) {
+      return isFinite(v) ? v.toFixed(1) + '%' : '—';
+    }
+
+    function gmColor(gmp) {
+      if (!isFinite(gmp)) return '#565F66';
+      if (gmp < 70)  return '#F14035';
+      if (gmp > 85)  return '#F8C220';
+      return '#00C371';
+    }
+
+    // ── CORE CALC ─────────────────────────────────────────────────────────────
+    function calc() {
+      const liveQty   = n('liveQty');
+      const livePrice = n('livePrice');
+      const liveInc   = n('liveInc');
+      const tradQty   = n('tradQty');
+      const tradPrice = n('tradPrice');
+      const tradInc   = n('tradInc');
+      const ssQty     = n('ssQty');
+      const ssInc     = n('ssInc');
+      const software  = n('softwareFee');
+      const discPct   = n('discount') / 100;
+      const incCap    = n('incentiveCap');
+
+      // Revenue
+      const interviewRev  = (liveQty * livePrice) + (tradQty * tradPrice); // ssPrice = $0
+      const grossRev      = interviewRev + software;
+      const effectiveRev  = grossRev * (1 - discPct);
+      const discountAmt   = grossRev - effectiveRev;
+
+      // Costs
+      const rawIncentives = (liveQty * liveInc) + (tradQty * tradInc) + (ssQty * ssInc);
+      const effIncentives = incCap > 0 ? Math.min(rawIncentives, incCap) : rawIncentives;
+      const isCapped      = incCap > 0 && rawIncentives > incCap;
+      const varLabor      = (liveQty * _LAB.live) + (tradQty * _LAB.trad);
+      const totalCost     = _FC + effIncentives + varLabor;
+
+      // Margin
+      const gmDollar  = effectiveRev - totalCost;
+      const gmPercent = effectiveRev > 0 ? (gmDollar / effectiveRev) * 100 : NaN;
+
+      return {
+        liveQty, livePrice, liveInc,
+        tradQty, tradPrice, tradInc,
+        ssQty, ssInc, software,
+        discPct, incCap,
+        interviewRev, grossRev, effectiveRev, discountAmt,
+        rawIncentives, effIncentives, isCapped,
+        varLabor, totalCost,
+        gmDollar, gmPercent
+      };
+    }
+
+    // ── SENSITIVITY ROW ───────────────────────────────────────────────────────
+    function sensitivityRow(m, multiplier, label, isCurrent) {
+      const liveCount = Math.round(m.liveQty * multiplier);
+      const tradCount = Math.round(m.tradQty * multiplier);
+      const ssCount   = Math.round(m.ssQty   * multiplier);
+
+      const rawInc = (liveCount * m.liveInc) + (tradCount * m.tradInc) + (ssCount * m.ssInc);
+      const effInc = m.incCap > 0 ? Math.min(rawInc, m.incCap) : rawInc;
+      const capped = m.incCap > 0 && rawInc > m.incCap;
+      const lab    = (liveCount * _LAB.live) + (tradCount * _LAB.trad);
+      const cost   = _FC + effInc + lab;
+      const gm$    = m.effectiveRev - cost;
+      const gmp    = m.effectiveRev > 0 ? (gm$ / m.effectiveRev) * 100 : NaN;
+
+      let rowClass = isCurrent ? 'row-current' : '';
+      if (isFinite(gmp)) {
+        if      (gmp < 70) rowClass += ' row-red';
+        else if (gmp > 85) rowClass += ' row-yellow';
+        else               rowClass += ' row-green';
+      }
+
+      const cappedBadge = capped ? `<span class="capped">[Capped]</span>` : '';
+      const gmStyle     = `font-weight:700;color:${gmColor(gmp)}`;
+
+      return `<tr class="${rowClass.trim()}">
+        <td>${label}</td>
+        <td>${liveCount}</td>
+        <td>${tradCount}</td>
+        <td>${money(m.effectiveRev)}</td>
+        <td>${money(cost)}${cappedBadge}</td>
+        <td style="${gmStyle}">${pct(gmp)}</td>
+      </tr>`;
+    }
+
+    // ── UPDATE UI ─────────────────────────────────────────────────────────────
+    function update() {
+      const m = calc();
+
+      // Panel A
+      document.getElementById('aInterviewRev').textContent = money(m.interviewRev);
+      document.getElementById('aSoftwareFee').textContent  = money(m.software);
+      document.getElementById('aGrossRev').textContent     = money(m.grossRev);
+      document.getElementById('aDiscountAmt').textContent  = m.discPct > 0 ? money(-m.discountAmt) : '—';
+      document.getElementById('aEffectiveRev').textContent = money(m.effectiveRev);
+
+      // Panel B
+      const otherCosts = m.varLabor + _FC;
+      costChart.data.datasets[0].data = [m.effIncentives, otherCosts];
+      costChart.update();
+      document.getElementById('bChartCenter').textContent = money(m.totalCost);
+      document.getElementById('bTotalCost').textContent   = money(m.totalCost);
+      const bGmEl = document.getElementById('bGmDollar');
+      bGmEl.textContent  = money(m.gmDollar);
+      bGmEl.style.color  = m.gmDollar >= 0 ? '#00C371' : '#F14035';
+
+      // Header badge
+      const badge     = document.getElementById('gmBadge');
+      const badgeVal  = document.getElementById('gmBadgeValue');
+      const badgeLbl  = badge.querySelector('.gm-badge-label');
+      const color     = isFinite(m.gmPercent) ? gmColor(m.gmPercent) : '#09D4C8';
+      badgeVal.textContent    = isFinite(m.gmPercent) ? m.gmPercent.toFixed(1) + '%' : '—';
+      badgeVal.style.color    = color;
+      badgeLbl.style.color    = color;
+      badge.style.borderColor = color;
+      badge.style.background  = color + '1a';
+
+      // Panel C — sensitivity table
+      const rows = [
+        { mult: 0.75, label: '−25% Volume' },
+        { mult: 1.00, label: 'Current',      current: true },
+        { mult: 1.25, label: '+25% Volume' },
+        { mult: 1.50, label: '+50% Volume' },
+        { mult: 2.00, label: '+100% Volume' }
+      ];
+      document.getElementById('sensitivityBody').innerHTML =
+        rows.map(r => sensitivityRow(m, r.mult, r.label, r.current || false)).join('');
+
+      // Panel D — price engine back-solve
+      const totalInt = m.liveQty + m.tradQty + m.ssQty;
+      const target   = n('targetGM') / 100;
+      const resultEl = document.getElementById('dResult');
+      const subEl    = document.getElementById('dSub');
+
+      if (totalInt === 0) {
+        resultEl.textContent = '—';
+        subEl.textContent    = 'Enter interview quantities to calculate';
+      } else if (target <= 0 || target >= 1) {
+        resultEl.textContent = '—';
+        subEl.textContent    = 'Target GM% must be between 1% and 99%';
+      } else {
+        // Back-solve: effectiveRev = totalCost / (1 - target)
+        // effectiveRev = (interviews × P + software) × (1 - discount)
+        // Solve for P:
+        const reqEffRev  = m.totalCost / (1 - target);
+        const reqRaw     = reqEffRev / (1 - m.discPct);
+        const reqIntRev  = reqRaw - m.software;
+        const minPrice   = reqIntRev / totalInt;
+
+        if (minPrice < 0) {
+          resultEl.textContent = 'N/A';
+          subEl.textContent    = 'Software fee alone covers target GM at current costs';
+        } else {
+          resultEl.textContent = money(Math.ceil(minPrice));
+          subEl.textContent    = `Across ${totalInt} interview${totalInt !== 1 ? 's' : ''} at ${(target * 100).toFixed(0)}% target`;
+        }
+      }
+    }
+
+    // ── LISTENERS ─────────────────────────────────────────────────────────────
+    document.querySelectorAll('input:not([disabled])').forEach(el => {
+      el.addEventListener('input', update);
+    });
+
+    update();
+  </script>
+</body>
+</html>
