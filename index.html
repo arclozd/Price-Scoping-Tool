@@ -279,10 +279,10 @@
       </div>
 
       <!-- BOTTOM ROW -->
-      <div class="quadrant-row bottom-row">
+      <div class="quadrant-row bottom-row" id="bottomRow">
 
-        <!-- C: Sensitivity -->
-        <div class="card">
+        <!-- C: Sensitivity (Full Pipeline only) -->
+        <div class="card" id="sensCard" style="display:none;">
           <div class="card-label">C — Margin Sensitivity</div>
           <div style="overflow-x:auto;">
             <table class="sens-table">
@@ -641,19 +641,24 @@
     badge.style.borderColor = col;
     badge.style.background  = col + '1a';
 
-    // Panel C
-    g('sensHead').innerHTML = `<tr>
-      <th>Scenario</th><th>Prem</th><th>Scale</th><th>Flex</th>
-      <th>Revenue</th><th>Cost</th><th>GM%</th>
-    </tr>`;
-    const rows = [
-      { mult: 0.75, label: '−25% Vol' },
-      { mult: 1.00, label: 'Current', cur: true },
-      { mult: 1.25, label: '+25% Vol' },
-      { mult: 1.50, label: '+50% Vol' },
-      { mult: 2.00, label: '+100% Vol' },
-    ];
-    g('sensBody').innerHTML = rows.map(r => sensRow(m, r.mult, r.label, r.cur || false)).join('');
+    // Panel C — Full Pipeline only
+    const isFullPipeline = activeBook === 'fullpipeline';
+    g('sensCard').style.display  = isFullPipeline ? 'block' : 'none';
+    g('bottomRow').style.gridTemplateColumns = isFullPipeline ? '' : '1fr';
+    if (isFullPipeline) {
+      g('sensHead').innerHTML = `<tr>
+        <th>Scenario</th><th>Prem</th><th>Scale</th><th>Flex</th>
+        <th>Revenue</th><th>Cost</th><th>GM%</th>
+      </tr>`;
+      const rows = [
+        { mult: 0.75, label: '−25% Vol' },
+        { mult: 1.00, label: 'Current', cur: true },
+        { mult: 1.25, label: '+25% Vol' },
+        { mult: 1.50, label: '+50% Vol' },
+        { mult: 2.00, label: '+100% Vol' },
+      ];
+      g('sensBody').innerHTML = rows.map(r => sensRow(m, r.mult, r.label, r.cur || false)).join('');
+    }
 
     // Panel D
     const totalInt   = Object.values(m.qtys).reduce((a, b) => a + b, 0);
