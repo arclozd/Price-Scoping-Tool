@@ -560,30 +560,6 @@
     const _FC  = 5905;
     const _LAB = { live: 49, trad: 6, ss: 0 };
 
-    // ── CHART INIT ────────────────────────────────────────────────────────────
-    const costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Incentives', 'Other Costs'],
-        datasets: [{
-          data: [0, _FC],
-          backgroundColor: ['#09D4C8', '#14A6F8'],
-          borderWidth: 0,
-          hoverOffset: 6
-        }]
-      },
-      options: {
-        cutout: '68%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: { label: c => ` ${c.label}: ${money(c.raw)}` }
-          }
-        },
-        animation: { duration: 250 }
-      }
-    });
-
     // ── HELPERS ───────────────────────────────────────────────────────────────
     function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
 
@@ -602,6 +578,35 @@
       if (gmp < 70)  return '#F14035';
       if (gmp > 85)  return '#F8C220';
       return '#00C371';
+    }
+
+    // ── CHART INIT ────────────────────────────────────────────────────────────
+    let costChart = null;
+    try {
+      costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Incentives', 'Other Costs'],
+          datasets: [{
+            data: [0, _FC],
+            backgroundColor: ['#09D4C8', '#14A6F8'],
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: { label: c => ` ${c.label}: ${money(c.raw)}` }
+            }
+          },
+          animation: { duration: 250 }
+        }
+      });
+    } catch (e) {
+      document.getElementById('costChart').style.display = 'none';
     }
 
     // ── CORE CALC ─────────────────────────────────────────────────────────────
@@ -694,8 +699,10 @@
 
       // Panel B
       const otherCosts = m.varLabor + _FC;
-      costChart.data.datasets[0].data = [m.effIncentives, otherCosts];
-      costChart.update();
+      if (costChart) {
+        costChart.data.datasets[0].data = [m.effIncentives, otherCosts];
+        costChart.update();
+      }
       document.getElementById('bChartCenter').textContent = money(m.totalCost);
       document.getElementById('bTotalCost').textContent   = money(m.totalCost);
       const bGmEl = document.getElementById('bGmDollar');
