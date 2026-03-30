@@ -170,8 +170,8 @@
         <div class="book-card-desc">Latest pricing with updated packages including Enterprise tier.</div>
       </div>
 
-      <div class="book-card disabled">
-        <div class="book-card-tag soon">Coming Soon</div>
+      <div class="book-card" onclick="selectBook('fullpipeline')">
+        <div class="book-card-tag">Price Book</div>
         <div class="book-card-name">Full Pipeline</div>
         <div class="book-card-desc">Custom scoping for complex multi-type pipeline programs.</div>
       </div>
@@ -350,6 +350,10 @@
         { id: 'flex',    label: 'Flex',    price:  199, labor:  0 },
       ],
     },
+    fullpipeline: {
+      label: 'Full Pipeline',
+      incentiveMode: 'variable',
+    },
   };
 
   let activeBook = null;
@@ -392,57 +396,106 @@
     const book = BOOKS[activeBook];
     let html = '';
 
-    // Step 1: Package
-    html += `
-      <div class="section-label"><span class="step-num">1</span>Software Package</div>
-      <select class="pkg-select" id="pkgSelect" onchange="onPkgChange()">
-        <option value="">— Select a package —</option>
-        ${book.packages.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
-      </select>
-      <div class="pkg-fee-pill" id="pkgFeePill" style="display:none;">
-        <span class="pkg-fee-pill-label">Platform Fee</span>
-        <span class="pkg-fee-pill-value" id="pkgFeeVal">—</span>
-      </div>
-      <div class="sidebar-divider"></div>
-    `;
+    if (activeBook === 'fullpipeline') {
+      // Full Pipeline: custom inputs per interview type
+      const fpTypes = [
+        { id: 'live', label: 'Live Interviews',  defPrice: 1000, defInc: 100, lockPrice: false },
+        { id: 'trad', label: 'Traditional Flex', defPrice:  345, defInc:  50, lockPrice: false },
+        { id: 'ss',   label: 'Self-Serve',       defPrice:    0, defInc:   0, lockPrice: true  },
+      ];
 
-    // Step 2: Interview Quantities
-    html += `<div class="section-label"><span class="step-num">2</span>Interview Quantities</div>`;
-    book.types.forEach(t => {
-      html += `
-        <div class="interview-block">
-          <div class="interview-block-header">
-            <span class="interview-block-name">${t.label}</span>
-            <span class="interview-block-price">${money(t.price)}/ea</span>
+      html += `<div class="section-label"><span class="step-num">1</span>Interview Types</div>`;
+      fpTypes.forEach(t => {
+        html += `
+          <div class="interview-block">
+            <div class="interview-block-header">
+              <span class="interview-block-name">${t.label}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+              <div>
+                <label class="input-label">Qty</label>
+                <input class="input-field" type="number" id="qty_${t.id}" value="0" min="0" oninput="update()">
+              </div>
+              <div>
+                <label class="input-label">Price ($)</label>
+                <input class="input-field" type="number" id="price_${t.id}" value="${t.defPrice}" min="0" ${t.lockPrice ? 'disabled' : 'oninput="update()"'}>
+              </div>
+              <div>
+                <label class="input-label">Incentive ($)</label>
+                <input class="input-field" type="number" id="inc_${t.id}" value="${t.defInc}" min="0" oninput="update()">
+              </div>
+            </div>
           </div>
-          <label class="input-label">Quantity</label>
-          <input class="input-field" type="number" id="qty_${t.id}" value="0" min="0" oninput="update()">
-          ${t.id === 'flex' && activeBook === 'b2025' ? `<div class="free-flex-note" id="freeFlexNote"></div>` : ''}
-        </div>
-      `;
-    });
+        `;
+      });
 
-    // Step 3: Adjustments
-    html += `
-      <div class="sidebar-divider"></div>
-      <div class="section-label"><span class="step-num">3</span>Adjustments</div>
-      <div style="margin-bottom:10px;">
-        <label class="input-label">Discount (%)</label>
-        <input class="input-field discount" type="number" id="discountPct" value="0" min="0" max="100" oninput="update()">
-      </div>
-    `;
-
-    // 2025: pass-through summary in sidebar
-    if (book.incentiveMode === 'passthrough') {
       html += `
-        <div class="passthrough-sidebar" id="ptSidebar">
-          <div class="passthrough-sidebar-title">Pass-Through Incentives (Customer Pays)</div>
-          <div class="passthrough-row"><span>Premium ($150/ea)</span><span id="ptSidePrem">$0</span></div>
-          <div class="passthrough-row"><span>Scale ($100/ea)</span><span id="ptSideScale">$0</span></div>
-          <div class="passthrough-row"><span>Flex ($50/ea)</span><span id="ptSideFlex">$0</span></div>
-          <div class="passthrough-total-row"><span>Total</span><span id="ptSideTotal" style="color:#14A6F8;">$0</span></div>
+        <div class="sidebar-divider"></div>
+        <div class="section-label"><span class="step-num">2</span>Program Settings</div>
+        <div style="margin-bottom:10px;">
+          <label class="input-label">Software Platform Fee ($)</label>
+          <input class="input-field" type="number" id="softwareFee" value="15000" min="0" oninput="update()">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="input-label">Discount (%)</label>
+          <input class="input-field discount" type="number" id="discountPct" value="0" min="0" max="100" oninput="update()">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="input-label">Incentive Cap ($)</label>
+          <input class="input-field" type="number" id="incCap" value="0" min="0" oninput="update()">
         </div>
       `;
+
+    } else {
+      // Standard price books: package dropdown + fixed interview prices
+      html += `
+        <div class="section-label"><span class="step-num">1</span>Software Package</div>
+        <select class="pkg-select" id="pkgSelect" onchange="onPkgChange()">
+          <option value="">— Select a package —</option>
+          ${book.packages.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
+        </select>
+        <div class="pkg-fee-pill" id="pkgFeePill" style="display:none;">
+          <span class="pkg-fee-pill-label">Platform Fee</span>
+          <span class="pkg-fee-pill-value" id="pkgFeeVal">—</span>
+        </div>
+        <div class="sidebar-divider"></div>
+      `;
+
+      html += `<div class="section-label"><span class="step-num">2</span>Interview Quantities</div>`;
+      book.types.forEach(t => {
+        html += `
+          <div class="interview-block">
+            <div class="interview-block-header">
+              <span class="interview-block-name">${t.label}</span>
+              <span class="interview-block-price">${money(t.price)}/ea</span>
+            </div>
+            <label class="input-label">Quantity</label>
+            <input class="input-field" type="number" id="qty_${t.id}" value="0" min="0" oninput="update()">
+            ${t.id === 'flex' && activeBook === 'b2025' ? `<div class="free-flex-note" id="freeFlexNote"></div>` : ''}
+          </div>
+        `;
+      });
+
+      html += `
+        <div class="sidebar-divider"></div>
+        <div class="section-label"><span class="step-num">3</span>Adjustments</div>
+        <div style="margin-bottom:10px;">
+          <label class="input-label">Discount (%)</label>
+          <input class="input-field discount" type="number" id="discountPct" value="0" min="0" max="100" oninput="update()">
+        </div>
+      `;
+
+      if (book.incentiveMode === 'passthrough') {
+        html += `
+          <div class="passthrough-sidebar" id="ptSidebar">
+            <div class="passthrough-sidebar-title">Pass-Through Incentives (Customer Pays)</div>
+            <div class="passthrough-row"><span>Premium ($150/ea)</span><span id="ptSidePrem">$0</span></div>
+            <div class="passthrough-row"><span>Scale ($100/ea)</span><span id="ptSideScale">$0</span></div>
+            <div class="passthrough-row"><span>Flex ($50/ea)</span><span id="ptSideFlex">$0</span></div>
+            <div class="passthrough-total-row"><span>Total</span><span id="ptSideTotal" style="color:#14A6F8;">$0</span></div>
+          </div>
+        `;
+      }
     }
 
     g('sidebar').innerHTML = html;
@@ -486,9 +539,50 @@
   }
 
   function calc() {
-    const book   = BOOKS[activeBook];
-    const pkgName = g('pkgSelect') ? g('pkgSelect').value : '';
-    const pkg    = book.packages.find(p => p.name === pkgName);
+    const book = BOOKS[activeBook];
+
+    if (activeBook === 'fullpipeline') {
+      const liveQty   = nv('qty_live');
+      const livePrice = nv('price_live');
+      const liveInc   = nv('inc_live');
+      const tradQty   = nv('qty_trad');
+      const tradPrice = nv('price_trad');
+      const tradInc   = nv('inc_trad');
+      const ssQty     = nv('qty_ss');
+      const ssInc     = nv('inc_ss');
+      const software  = nv('softwareFee');
+      const discPct   = nv('discountPct') / 100;
+      const incCap    = nv('incCap');
+
+      const intRev       = (liveQty * livePrice) + (tradQty * tradPrice); // SS locked at $0
+      const grossRev     = intRev + software;
+      const effectiveRev = grossRev * (1 - discPct);
+      const discountAmt  = grossRev - effectiveRev;
+
+      const rawInc  = (liveQty * liveInc) + (tradQty * tradInc) + (ssQty * ssInc);
+      const effInc  = incCap > 0 ? Math.min(rawInc, incCap) : rawInc;
+      const isCapped = incCap > 0 && rawInc > incCap;
+      const varLabor = (liveQty * 49) + (tradQty * 6);
+      const totalCost = _FC + effInc + varLabor;
+
+      const gmDollar  = effectiveRev - totalCost;
+      const gmPercent = effectiveRev > 0 ? (gmDollar / effectiveRev) * 100 : NaN;
+
+      return {
+        book, software, discPct, incCap,
+        qtys: { live: liveQty, trad: tradQty, ss: ssQty },
+        incs: { live: liveInc, trad: tradInc, ss: ssInc },
+        rawInc, effInc, isCapped,
+        intRev, grossRev, effectiveRev, discountAmt,
+        varLabor, totalCost, gmDollar, gmPercent,
+        // unused by fp but keep shape consistent
+        pkg: null, freeFlex: 0, billedFlex: 0, pt: {}, ptTotal: 0,
+      };
+    }
+
+    // Standard price books
+    const pkgName  = g('pkgSelect') ? g('pkgSelect').value : '';
+    const pkg      = book.packages.find(p => p.name === pkgName);
     const software = pkg ? pkg.fee : 0;
     const freeFlex = (activeBook === 'b2025' && pkg?.freeFlex) ? pkg.freeFlex : 0;
     const discPct  = nv('discountPct') / 100;
@@ -498,21 +592,18 @@
 
     const billedFlex = Math.max(0, (qtys.flex || 0) - freeFlex);
 
-    // Revenue
     let intRev = 0;
     book.types.forEach(t => {
       const q = t.id === 'flex' ? billedFlex : (qtys[t.id] || 0);
       intRev += q * t.price;
     });
-    const grossRev    = intRev + software;
+    const grossRev     = intRev + software;
     const effectiveRev = grossRev * (1 - discPct);
     const discountAmt  = grossRev - effectiveRev;
 
-    // Labor (always)
     let varLabor = 0;
     book.types.forEach(t => { varLabor += (qtys[t.id] || 0) * t.labor; });
 
-    // Pass-through (2025 only)
     const pt = {};
     let ptTotal = 0;
     if (book.incentiveMode === 'passthrough') {
@@ -526,30 +617,33 @@
     const gmDollar  = effectiveRev - totalCost;
     const gmPercent = effectiveRev > 0 ? (gmDollar / effectiveRev) * 100 : NaN;
 
-    return { book, pkg, software, freeFlex, discPct, qtys, billedFlex, intRev, grossRev, effectiveRev, discountAmt, varLabor, totalCost, pt, ptTotal, gmDollar, gmPercent };
+    return { book, pkg, software, freeFlex, discPct, qtys, billedFlex, intRev, grossRev, effectiveRev, discountAmt, varLabor, totalCost, pt, ptTotal, gmDollar, gmPercent, effInc: 0, isCapped: false, incCap: 0 };
   }
 
   function sensRow(m, mult, label, isCur) {
-    const book = m.book;
-    const sq = {};
-    book.types.forEach(t => { sq[t.id] = Math.round((m.qtys[t.id] || 0) * mult); });
+    // Full Pipeline sensitivity row
+    const liveCount = Math.round((m.qtys.live || 0) * mult);
+    const tradCount = Math.round((m.qtys.trad || 0) * mult);
+    const ssCount   = Math.round((m.qtys.ss   || 0) * mult);
 
-    let varLabor = 0;
-    book.types.forEach(t => { varLabor += sq[t.id] * t.labor; });
-    const cost = _FC + varLabor;
-    const gm$  = m.effectiveRev - cost;
-    const gmp  = m.effectiveRev > 0 ? (gm$ / m.effectiveRev) * 100 : NaN;
+    const rawInc = (liveCount * m.incs.live) + (tradCount * m.incs.trad) + (ssCount * m.incs.ss);
+    const effInc = m.incCap > 0 ? Math.min(rawInc, m.incCap) : rawInc;
+    const capped = m.incCap > 0 && rawInc > m.incCap;
+    const lab    = (liveCount * 49) + (tradCount * 6);
+    const cost   = _FC + effInc + lab;
+    const gm$    = m.effectiveRev - cost;
+    const gmp    = m.effectiveRev > 0 ? (gm$ / m.effectiveRev) * 100 : NaN;
 
     let cls = isCur ? 'cur' : '';
     if (isFinite(gmp)) cls += gmp < 70 ? ' r-red' : gmp > 85 ? ' r-yellow' : ' r-green';
+    const cappedBadge = capped ? `<span style="font-size:9px;font-weight:700;color:#09D4C8;margin-left:4px;">[Capped]</span>` : '';
 
     return `<tr class="${cls.trim()}">
       <td>${label}</td>
-      <td>${sq.premium || 0}</td>
-      <td>${sq.scale || 0}</td>
-      <td>${sq.flex || 0}</td>
+      <td>${liveCount}</td>
+      <td>${tradCount}</td>
       <td>${money(m.effectiveRev)}</td>
-      <td>${money(cost)}</td>
+      <td>${money(cost)}${cappedBadge}</td>
       <td style="font-weight:700;color:${gmColor(gmp)}">${pct(gmp)}</td>
     </tr>`;
   }
@@ -595,17 +689,27 @@
     }
 
     // Panel B
+    const isFP = activeBook === 'fullpipeline';
     if (costChart) {
-      costChart.data.datasets[0].data = [m.varLabor, _FC];
+      if (isFP) {
+        costChart.data.labels = ['Incentives', 'Other Costs'];
+        costChart.data.datasets[0].data = [m.effInc, m.varLabor + _FC];
+      } else {
+        costChart.data.labels = ['Variable Labor', 'Fixed Costs'];
+        costChart.data.datasets[0].data = [m.varLabor, _FC];
+      }
       costChart.update();
     }
-    g('bCenter').textContent   = money(m.totalCost);
+    g('bCenter').textContent    = money(m.totalCost);
     g('bTotalCost').textContent = money(m.totalCost);
     const bGm = g('bGmDollar');
     bGm.textContent = money(m.gmDollar);
     bGm.style.color = m.gmDollar >= 0 ? '#00C371' : '#F14035';
 
-    g('chartLegend').innerHTML = `
+    g('chartLegend').innerHTML = isFP ? `
+      <div class="legend-item"><div class="legend-dot" style="background:#09D4C8;"></div>Incentives</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#14A6F8;"></div>Other Costs</div>
+    ` : `
       <div class="legend-item"><div class="legend-dot" style="background:#09D4C8;"></div>Variable Labor</div>
       <div class="legend-item"><div class="legend-dot" style="background:#14A6F8;"></div>Fixed Costs</div>
     `;
@@ -621,12 +725,11 @@
     badge.style.background  = col + '1a';
 
     // Panel C — Full Pipeline only
-    const isFullPipeline = activeBook === 'fullpipeline';
-    g('sensCard').style.display  = isFullPipeline ? 'block' : 'none';
-    g('bottomRow').style.gridTemplateColumns = isFullPipeline ? '' : '1fr';
-    if (isFullPipeline) {
+    g('sensCard').style.display = isFP ? 'block' : 'none';
+    g('bottomRow').style.gridTemplateColumns = isFP ? '' : '1fr';
+    if (isFP) {
       g('sensHead').innerHTML = `<tr>
-        <th>Scenario</th><th>Prem</th><th>Scale</th><th>Flex</th>
+        <th>Scenario</th><th>Live</th><th>Flex</th>
         <th>Revenue</th><th>Cost</th><th>GM%</th>
       </tr>`;
       const rows = [
@@ -640,10 +743,17 @@
     }
 
     // Panel D
-    const totalInt   = Object.values(m.qtys).reduce((a, b) => a + b, 0);
-    const billableInt = (m.qtys.premium || 0) + (m.qtys.scale || 0) + m.billedFlex;
-    const target     = nv('targetGM') / 100;
     const rEl = g('dResult'), sEl = g('dSub');
+    const target = nv('targetGM') / 100;
+
+    let totalInt, billableInt;
+    if (isFP) {
+      totalInt    = (m.qtys.live || 0) + (m.qtys.trad || 0) + (m.qtys.ss || 0);
+      billableInt = (m.qtys.live || 0) + (m.qtys.trad || 0); // SS is $0
+    } else {
+      totalInt    = Object.values(m.qtys).reduce((a, b) => a + b, 0);
+      billableInt = (m.qtys.premium || 0) + (m.qtys.scale || 0) + m.billedFlex;
+    }
 
     if (totalInt === 0) {
       rEl.textContent = '—'; sEl.textContent = 'Enter interview quantities to calculate';
